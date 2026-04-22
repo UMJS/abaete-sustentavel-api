@@ -1,0 +1,123 @@
+{
+  "name": "Chatbot - Abaeté Sustentável",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "abaete-webhook-interacao",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Webhook (Recebe msg do WhatsApp)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8080/api/materiais/duvida",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"pergunta_usuario\": \"{{ $json.body.mensagem }}\",\n  \"canal_origem\": \"WhatsApp\"\n}",
+        "options": {}
+      },
+      "id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Salvar no Banco via Java API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/api/materiais",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "busca",
+              "value": "={{ $json.body.mensagem }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+      "name": "Consultar Tempo de Decomposição",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "resposta_chatbot",
+              "value": "=Olá! O material pesquisado leva cerca de {{ $json.tempo_decomposicao }} para se decompor na natureza. Recomendação do Manual: {{ $json.recomendacao }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f90",
+      "name": "Formatar Resposta para o Usuário",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        940,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (Recebe msg do WhatsApp)": {
+      "main": [
+        [
+          {
+            "node": "Salvar no Banco via Java API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar no Banco via Java API": {
+      "main": [
+        [
+          {
+            "node": "Consultar Tempo de Decomposição",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Tempo de Decomposição": {
+      "main": [
+        [
+          {
+            "node": "Formatar Resposta para o Usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f90bd6fb-60e5-4b0d-9b57-d64cb2ea2444"
+}
